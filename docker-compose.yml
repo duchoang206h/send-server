@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    env_file: 
+      ".env"
+    volumes:
+      - mongodb_data:/data/db
+  proxy:
+    image: nginx:1.21.0-alpine
+    container_name: proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    env_file:
+      - ".env"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - mongodb
+      - storage
+      - server 
+  storage: 
+    image: duchoang206h/telebot-storage
+    container_name: storage
+    ports:
+      - "3000:3000"  
+  server:
+    build:
+      dockerfile: "./Dockerfile"
+    container_name: server
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mongodb
+      - storage
+volumes:
+  mongodb_data:
+networks:
+  external:
