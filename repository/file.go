@@ -14,23 +14,25 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
+
 type FileRepository interface {
-	CreateFile (fileId string) (*model.File, error)
-	FindByHash(hash string)  *model.File
-	Save (file *model.File) error
-	FormatHashToUrl (hash string) string
+	CreateFile(fileId string) (*model.File, error)
+	FindByHash(hash string) *model.File
+	Save(file *model.File) error
+	FormatHashToUrl(hash string) string
 }
 type fileRepository struct {
 	collection *mongo.Collection
 }
 
-func NewFileRepository () FileRepository {
-	mg:= database.GetMongo()
+func NewFileRepository() FileRepository {
+	mg := database.GetMongo()
 	collection := mg.Collection("files")
 	return &fileRepository{
 		collection: collection,
 	}
 }
+
 func generateUniqueHash(ctx context.Context, findHash chan<- string, findHashFunc func(string) *model.File) {
 	for {
 		select {
@@ -38,8 +40,8 @@ func generateUniqueHash(ctx context.Context, findHash chan<- string, findHashFun
 			return
 		default:
 			hash := util.RandomString(8)
-			exist := findHashFunc(hash);
-			if  exist == nil {
+			exist := findHashFunc(hash)
+			if exist == nil {
 				fmt.Println("exist", exist)
 				findHash <- hash
 				return
@@ -49,6 +51,7 @@ func generateUniqueHash(ctx context.Context, findHash chan<- string, findHashFun
 		}
 	}
 }
+
 func (fr *fileRepository) CreateFile(fileId string) (*model.File, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
@@ -56,9 +59,9 @@ func (fr *fileRepository) CreateFile(fileId string) (*model.File, error) {
 	go generateUniqueHash(ctx, findHashCh, fr.FindByHash)
 	select {
 	case hash := <-findHashCh:
-		file := model.File {
+		file := model.File{
 			FileID: fileId,
-			Hash: hash,
+			Hash:   hash,
 		}
 		err := fr.Save(&file)
 		if err != nil {
@@ -69,10 +72,10 @@ func (fr *fileRepository) CreateFile(fileId string) (*model.File, error) {
 		// Timeout occurred, handle accordingly
 		return nil, ctx.Err()
 	}
-
 }
-func (fr *fileRepository) FindByHash (hash string) *model.File {
-	query:= bson.M{"hash": hash}
+
+func (fr *fileRepository) FindByHash(hash string) *model.File {
+	query := bson.M{"hash": hash}
 	var file model.File
 	result := fr.collection.FindOne(context.TODO(), query)
 	if result.Err() != nil {
@@ -84,19 +87,19 @@ func (fr *fileRepository) FindByHash (hash string) *model.File {
 	return &file
 }
 
-
-func (fr *fileRepository) Save (file *model.File) error{
-	result, err:= fr.collection.InsertOne(context.Background(), file)
+func (fr *fileRepository) Save(file *model.File) error {
+	result, err := fr.collection.InsertOne(context.Background(), file)
 	if err != nil {
-		return  err
+		return err
 	}
 	insertedID, ok := result.InsertedID.(primitive.ObjectID)
 	if !ok {
 		errors.New("Failed to convert inserted ID to ObjectID")
 	}
 	file.ID = insertedID
-	return  nil
+	return nil
 }
-func (fr *fileRepository) FormatHashToUrl (hash string) string {
-	return fmt.Sprintf("%s/%s", config.Config("PROXY_URL"), hash)
+
+func (fr *fileRepository) FormatHashToUrl(hash string) string {
+	return fmt.Sprintf("%s/api/file/%s", config.Config("PROXY_URL"), hash)
 }

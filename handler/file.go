@@ -6,6 +6,7 @@ import (
 
 	"github.com/duchoang206h/send-server/config"
 	"github.com/duchoang206h/send-server/repository"
+	"github.com/duchoang206h/send-server/util"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/proxy"
 )
@@ -44,10 +45,10 @@ func (fileHandler *FileHandler) HandleFileUpload (c *fiber.Ctx) error {
 			"result": nil,
 		})
 	}
-	fmt.Println("err::", err)
-
+	fileUrl := fileHandler.fileRepo.FormatHashToUrl(file.Hash)
+	shortenFileUrl, _ := util.ShortenUrl(fileUrl)
 	return c.JSON(fiber.Map{
-		"result": fileHandler.fileRepo.FormatHashToUrl(file.Hash),
+		"result": shortenFileUrl,
 	})
 } 
 func (fileHandler *FileHandler) HandleDownloadFile (c *fiber.Ctx) error {
@@ -70,8 +71,7 @@ func (fileHandler *FileHandler) HandleDownloadFile (c *fiber.Ctx) error {
 			"result": nil,
 		})
 	}
-	if err := proxy.DoRedirects(c, bodyRsp.Result, PROXY_RETRY); err != nil {
-		return err
-	}
+	c.Set("Content-Type", "application/octet-stream")
+	c.Redirect(bodyRsp.Result)
 	return nil
 }
