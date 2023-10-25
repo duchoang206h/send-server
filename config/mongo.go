@@ -4,8 +4,8 @@ import (
 	"fmt"
 )
 
-func GetMongoURI () string {
-	dbPort :=Config("DB_PORT")
+func GetMongoURI() string {
+	dbPort := Config("DB_PORT")
 	dbUser := Config("DB_USER")
 	dbPass := Config("DB_PASSWORD")
 	dbHost := Config("DB_HOST")
@@ -13,7 +13,8 @@ func GetMongoURI () string {
 	fmt.Println("mongoURI:::", mongoURI)
 	return mongoURI
 }
-func GetMongoDBName () string {
+
+func GetMongoDBName() string {
 	dbName := Config("DB_NAME")
 	return dbName
 }
