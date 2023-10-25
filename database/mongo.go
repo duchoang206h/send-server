@@ -9,18 +9,21 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
 type MongoInstance struct {
 	Client *mongo.Client
 	Db     *mongo.Database
 }
+
 var mg *MongoInstance
-func Connect () error {
+
+func ConnectMongo() error {
 	// load config
-	mongoURI:= config.GetMongoURI()
-	dbName:=config.GetMongoDBName()
+	mongoURI := config.GetMongoURI()
+	dbName := config.GetMongoDBName()
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx,options.Client().ApplyURI(mongoURI))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
 	if err != nil {
 		return err
 	}
@@ -36,13 +39,16 @@ func Connect () error {
 	fmt.Println("mongodb connected")
 	return nil
 }
-func GetMongo () *MongoInstance {
+
+func GetMongo() *MongoInstance {
 	return mg
 }
-func (mg *MongoInstance) Collection (name string) *mongo.Collection{
+
+func (mg *MongoInstance) Collection(name string) *mongo.Collection {
 	collection := mg.Db.Collection(name)
 	return collection
 }
+
 func (mg *MongoInstance) Disconnect(ctx context.Context) error {
 	return mg.Client.Disconnect(ctx)
 }
