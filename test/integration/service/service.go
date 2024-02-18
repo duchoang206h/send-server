@@ -92,9 +92,10 @@ func New() (*Service, error) {
 				"DB_NAME=send",
 				"DB_HOST=" + mongo.GetIPInNetwork(network),
 				"DB_PORT=27017",
-				"SERVER_URL=http://localhost:3002",
-				"STORAGE_URL=http://localhost:3000",
+				"SERVER_URL=http://localhost:3000",
+				"STORAGE_URL=" + fmt.Sprintf("http://%s:3002", storage.GetIPInNetwork(network)),
 				"PROXY_URL=http://localhost:3000",
+				"SERVER_PORT=:3000",
 			},
 		},
 	)
