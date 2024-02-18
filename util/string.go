@@ -23,12 +23,14 @@ func RandomString(length int) string {
 	}
 	return string(b)
 }
+
 type ShortenUrlAPIResponse struct {
 	Short string `json:"short"`
 }
+
 func ShortenUrl(url string) (string, error) {
 	shortenAPIUrl := config.Config("SHORTEN_API_URL")
-	resp, err:=http.Get(shortenAPIUrl + fmt.Sprintf("?url=%s", url))
+	resp, err := http.Get(shortenAPIUrl + fmt.Sprintf("?url=%s", url))
 	if err != nil {
 		return "", err
 	}

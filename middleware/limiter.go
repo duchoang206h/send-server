@@ -1,4 +1,4 @@
-package midleware
+package middleware
 
 import (
 	"github.com/duchoang206h/send-server/config"

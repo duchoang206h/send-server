@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/duchoang206h/send-server/config"
-	"github.com/duchoang206h/send-server/database"
 	"github.com/duchoang206h/send-server/model"
 	"github.com/duchoang206h/send-server/util"
 	"go.mongodb.org/mongo-driver/bson"
@@ -18,6 +17,7 @@ import (
 type FileRepository interface {
 	CreateFile(fileId string) (*model.File, error)
 	FindByHash(hash string) *model.File
+	FindById(fileId string) *model.File
 	Save(file *model.File) error
 	FormatHashToUrl(hash string) string
 }
@@ -25,9 +25,7 @@ type fileRepository struct {
 	collection *mongo.Collection
 }
 
-func NewFileRepository() FileRepository {
-	mg := database.GetMongo()
-	collection := mg.Collection("files")
+func NewFileRepository(collection *mongo.Collection) FileRepository {
 	return &fileRepository{
 		collection: collection,
 	}
@@ -46,8 +44,7 @@ func generateUniqueHash(ctx context.Context, findHash chan<- string, findHashFun
 				findHash <- hash
 				return
 			}
-			fmt.Println("existg", exist)
-
+			fmt.Println("exist", exist)
 		}
 	}
 }
@@ -87,6 +84,19 @@ func (fr *fileRepository) FindByHash(hash string) *model.File {
 	return &file
 }
 
+func (fr *fileRepository) FindById(fileId string) *model.File {
+	query := bson.M{"fileId": fileId}
+	var file model.File
+	result := fr.collection.FindOne(context.TODO(), query)
+	if result.Err() != nil {
+		return nil
+	}
+	if err := result.Decode(&file); err != nil {
+		return nil
+	}
+	return &file
+}
+
 func (fr *fileRepository) Save(file *model.File) error {
 	result, err := fr.collection.InsertOne(context.Background(), file)
 	if err != nil {
@@ -94,7 +104,7 @@ func (fr *fileRepository) Save(file *model.File) error {
 	}
 	insertedID, ok := result.InsertedID.(primitive.ObjectID)
 	if !ok {
-		errors.New("Failed to convert inserted ID to ObjectID")
+		return errors.New("failed to convert inserted ID to ObjectID")
 	}
 	file.ID = insertedID
 	return nil
