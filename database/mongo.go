@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/duchoang206h/send-server/config"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -17,10 +16,9 @@ type MongoInstance struct {
 
 var mg *MongoInstance
 
-func ConnectMongo() error {
+func ConnectMongo(mongoURI, dbName string) error {
 	// load config
-	mongoURI := config.GetMongoURI()
-	dbName := config.GetMongoDBName()
+
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))

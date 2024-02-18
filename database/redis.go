@@ -3,14 +3,13 @@ package database
 import (
 	"fmt"
 
-	"github.com/duchoang206h/send-server/config"
 	"github.com/gofiber/storage/redis/v3"
 )
 
 var store *redis.Storage
 
-func ConnectRedis() {
-	store = redis.New(config.GetRedisConfig())
+func ConnectRedis(config redis.Config) {
+	store = redis.New(config)
 	fmt.Println("redis connected")
 }
 
